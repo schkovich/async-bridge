@@ -17,11 +17,11 @@ using HandlerFunction = uint32_t (*)(void *param);
  */
 class IAsyncContext {
 public:
-    virtual bool addWorker(PerpetualWorker &worker) = 0;
-    virtual bool addWorker(EphemeralWorker &worker, std::uint32_t delay) = 0;
+    virtual bool addWorker(PerpetualWorker &worker) const = 0;
+    virtual bool addWorker(EphemeralWorker &worker, std::uint32_t delay) const = 0;
     virtual bool removeWorker(PerpetualWorker &worker) = 0;
     virtual bool removeWorker(EphemeralWorker &worker) = 0;
-    virtual void setWorkPending(PerpetualWorker &worker) = 0;
+    virtual void setWorkPending(PerpetualWorker &worker) const = 0;
 
     virtual void acquireLock() = 0;
     virtual void releaseLock() = 0;

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "IAsyncContext.hpp"
+#include "PerpetualBridge.hpp"
 #include "WorkerBase.hpp"
 
 namespace async_bridge {

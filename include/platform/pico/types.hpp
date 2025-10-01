@@ -28,4 +28,14 @@ namespace async_bridge {
 
     using perpetual_worker_t = async_when_pending_worker_t;
         using ephemeral_worker_t = async_at_time_worker_t;
+
+    extern "C" {
+        // Forward declaration of the perpetual bridging function
+        void perpetual_bridging_function(async_context_t *context,
+                                         async_when_pending_worker_t *worker);
+
+        // Forward declaration of the ephemeral bridging function
+        void ephemeral_bridging_function(async_context_t *context,
+                                         async_work_on_timeout *worker);
+    }
 } // namespace async_bridge

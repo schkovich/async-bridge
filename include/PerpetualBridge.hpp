@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 #pragma once
 
-#include "EventBridge.hpp"
+#include "platform/pico/types.hpp"
+#include "IEventBridge.hpp"
+#include "PerpetualWorker.hpp"
 
 #include <memory>
 
@@ -9,19 +11,21 @@ namespace async_bridge {
 
 class PerpetualWorker; // forward-declared handle
 
-class PerpetualBridge : public EventBridge {
+class PerpetualBridge : public IEventBridge {
+    friend void perpetual_bridging_function(async_context_t *context,
+                                       async_when_pending_worker_t *worker);
 public:
-    explicit PerpetualBridge(const IAsyncContext &ctx) : EventBridge(ctx) {}
+    explicit PerpetualBridge(IAsyncContext &ctx) : IEventBridge(ctx) {}
 
     // Implementations should remove worker in the destructor via context
     ~PerpetualBridge() override = default;
 
     void initialiseBridge() override;
 
-    void run();
+    void run() const;
 
     // Optional workload entry point for derived classes
-    virtual void workload(void *data) { (void)data; }
+    void workload(void *data) override;
 
 protected:
     PerpetualWorker *m_perpetual_worker = nullptr;

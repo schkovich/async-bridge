@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 /**
  * @file SyncBridge.cpp
  * @brief Implementation of SyncBridge for thread-safe, context-aware resource
@@ -17,11 +18,11 @@
 
 #include "SyncBridge.hpp"
 
-namespace async_tcp {
+#include <pico/mutex.h>
 
-    SyncBridge::SyncBridge(const AsyncCtx &ctx) : m_ctx(ctx) {
-        recursive_mutex_init(&m_execution_mutex);
-    }
+namespace async_bridge {
+
+    SyncBridge::SyncBridge(const AsyncCtx &ctx) : m_ctx(ctx) {}
 
     uint32_t SyncBridge::doExecute(SyncPayloadPtr payload) { // NOLINT
         return onExecute(std::move(payload));

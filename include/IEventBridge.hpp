@@ -1,20 +1,26 @@
 // SPDX-License-Identifier: MPL-2.0
 #pragma once
+#include "IAsyncContext.hpp"
 
 namespace async_bridge {
     class IAsyncContext;
 
-    class EventBridge {
+    class IEventBridge {
 protected:
-    explicit EventBridge(const IAsyncContext &ctx) : m_ctx(ctx) {}
+    IAsyncContext &m_ctx;
+
+    explicit IEventBridge(IAsyncContext &ctx) : m_ctx(ctx) {}
 
     virtual void onWork() = 0;
+
     void doWork() { onWork(); }
 
     [[nodiscard]] const IAsyncContext &getContext() const { return m_ctx; }
 
+    [[nodiscard]] IAsyncContext &getContext() noexcept { return m_ctx; }
+
 public:
-    virtual ~EventBridge() = default;
+    virtual ~IEventBridge() = default;
 
     /**
      * Initialise any runtime structures required by the bridge. Implementations
@@ -22,8 +28,7 @@ public:
      */
     virtual void initialiseBridge() = 0;
 
-protected:
-    const IAsyncContext &m_ctx;
+    virtual void workload(void *data) = 0;
 };
 
 } // namespace async_bridge

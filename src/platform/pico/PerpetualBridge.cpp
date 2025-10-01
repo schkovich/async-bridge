@@ -1,6 +1,10 @@
-#include "PerpetualBridge.hpp"
+#include "../../../include/PerpetualBridge.hpp"
 
-namespace async_tcp {
+#include "../../../include/PerpetualWorker.hpp"
+
+#include <pico/async_context.h>
+
+namespace async_bridge {
 
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     void perpetual_bridging_function(async_context_t *context,
@@ -12,14 +16,13 @@ namespace async_tcp {
     }
 
     void PerpetualBridge::initialiseBridge() {
-        m_perpetual_worker.setHandler(&perpetual_bridging_function);
-        m_perpetual_worker.setPayload(this);
-        getContext().addWorker(m_perpetual_worker);
+        m_perpetual_worker->setHandler(&perpetual_bridging_function);
+        m_perpetual_worker->setPayload(this);
+        getContext().addWorker(*m_perpetual_worker);
     }
 
-    void PerpetualBridge::run() {
-        getContext().setWorkPending(m_perpetual_worker);
+    void PerpetualBridge::run() const {
+        getContext().setWorkPending(*m_perpetual_worker);
     }
-
-    void PerpetualBridge::workload(void *data) {/* noop */}
+    void PerpetualBridge::workload(void *data) {}
 } // namespace async_tcp
