@@ -24,5 +24,5 @@ namespace async_bridge {
     void PerpetualBridge::run() const {
         getContext().setWorkPending(*m_perpetual_worker);
     }
-    void PerpetualBridge::workload(void *data) {}
+    void PerpetualBridge::workload(void *data) {/* No-op by default */}
 } // namespace async_tcp

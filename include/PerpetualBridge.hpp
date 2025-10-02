@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 #pragma once
 
-#include "platform/pico/types.hpp"
-#include "IEventBridge.hpp"
 #include "PerpetualWorker.hpp"
+#include "async_bridge/IEventBridge.hpp"
+#include "platform/pico/types.hpp"
 
 #include <memory>
 
