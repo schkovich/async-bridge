@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 #pragma once
-#include "IAsyncContext.hpp"
+#include "../IAsyncContext.hpp"
 
 namespace async_bridge {
     class IAsyncContext;
