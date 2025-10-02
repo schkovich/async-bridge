@@ -7,8 +7,6 @@ namespace async_bridge {
 class PerpetualWorker;
 class EphemeralWorker;
 
-using HandlerFunction = uint32_t (*)(void *param);
-
 /**
  * Minimal abstract async context interface used by bridge base classes.
  *
@@ -19,12 +17,12 @@ class IAsyncContext {
 public:
     virtual bool addWorker(PerpetualWorker &worker) const = 0;
     virtual bool addWorker(EphemeralWorker &worker, std::uint32_t delay) const = 0;
-    virtual bool removeWorker(PerpetualWorker &worker) = 0;
-    virtual bool removeWorker(EphemeralWorker &worker) = 0;
+    virtual bool removeWorker(PerpetualWorker &worker) const = 0;
+    virtual bool removeWorker(EphemeralWorker &worker) const = 0;
     virtual void setWorkPending(PerpetualWorker &worker) const = 0;
 
-    virtual void acquireLock() = 0;
-    virtual void releaseLock() = 0;
+    virtual void acquireLock() const = 0;
+    virtual void releaseLock() const = 0;
 
     virtual uint32_t execWorkSynchronously(const handler_function_t &handler, void *param) = 0;
 
