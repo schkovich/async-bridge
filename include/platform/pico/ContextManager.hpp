@@ -4,7 +4,7 @@
  * AsyncTCP library.
  *
  * This file declares the ContextManager class, which serves as the foundation
- * for thread-safe operations across different cores in a multi-core system. It
+ * for thread-safe operations across different cores in a multicore system. It
  * provides:
  *   - A thread-safe environment for executing code on a specific core
  *   - Management of worker tasks that can be scheduled for asynchronous
@@ -25,26 +25,13 @@
 #pragma once
 
 #include "../../IAsyncContext.hpp"
+#include "platform/pico/types.hpp"
 
 #include <pico/async_context_threadsafe_background.h>
 
 namespace async_bridge {
     class PerpetualWorker;
     class EphemeralWorker;
-
-    /**
-     * @brief Function pointer type for asynchronous work handlers.
-     *
-     * This type represents a pointer to a function that takes a void pointer as
-     * its argument and returns an uint32_t. It is used as the callback
-     * signature for executing work synchronously through the async_context
-     * system.
-     *
-     * @note The void* parameter allows passing arbitrary data to the handler,
-     * and the uint32_t return value can be used to indicate success, failure
-     * or other status information.
-     */
-    typedef uint32_t (*HandlerFunction)(void *param);
 
     /**
      * @class ContextManager
@@ -120,7 +107,7 @@ namespace async_bridge {
              * @return true if the worker was successfully added, false if the
              * context is invalid or addition failed.
              */
-            bool addWorker(PerpetualWorker& worker) const;
+            bool addWorker(PerpetualWorker& worker) const override;
 
             /**
              * @brief Adds a temporary worker that executes once after an
@@ -136,7 +123,7 @@ namespace async_bridge {
              * @return true if the worker was successfully scheduled, false
              * otherwise
              */
-            bool addWorker(EphemeralWorker& worker, uint32_t delay = 0) const;
+            bool addWorker(EphemeralWorker& worker, uint32_t delay = 0) const override;
 
             /**
              * @brief Removes a previously added worker from the context.
@@ -149,7 +136,7 @@ namespace async_bridge {
              * @return true if the worker was successfully removed, false
              * otherwise
              */
-            bool removeWorker(PerpetualWorker& worker) const;
+            bool removeWorker(PerpetualWorker& worker) const override;
 
             /**
              * @brief Removes an ephemeral worker from the scheduled queue
@@ -160,7 +147,7 @@ namespace async_bridge {
              * @return true if the worker was successfully removed, false
              * otherwise
              */
-            bool removeWorker(EphemeralWorker& worker) const;
+            bool removeWorker(EphemeralWorker& worker) const override;
 
             /**
              * @brief Marks a worker as having pending work to be processed.
@@ -172,7 +159,7 @@ namespace async_bridge {
              * @param worker Reference to the PerpetualWorker instance for which
              * work is set as pending
              */
-            void setWorkPending(PerpetualWorker& worker) const;
+            void setWorkPending(PerpetualWorker& worker) const override;
 
             /**
              * @brief Acquires a blocking lock on the asynchronous context.
@@ -185,7 +172,7 @@ namespace async_bridge {
              * @warning Always pair this with a releaseLock() call to prevent
              * deadlocks
              */
-            void acquireLock() const;
+            void acquireLock() const override;
 
             /**
              * @brief Releases a previously acquired lock on the context.
@@ -193,7 +180,7 @@ namespace async_bridge {
              * This should always be called after a successful acquireLock() to
              * allow other threads to access the context.
              */
-            void releaseLock() const;
+            void releaseLock() const override;
 
             /**
              * @brief Initializes the asynchronous context with the provided
@@ -229,7 +216,7 @@ namespace async_bridge {
              * @return The value returned by the handler function
              */
             [[nodiscard]] uint32_t
-            execWorkSynchronously(const HandlerFunction &handler,
+            execWorkSynchronously(const handler_function_t &handler,
                                   void *param) const;
 
             /**

@@ -1,5 +1,4 @@
 /**
-/**
  * @file ContextManager.cpp
  * @brief Implements asynchronous context management and worker scheduling for
  * the AsyncTCP library.
@@ -9,10 +8,10 @@
  * and synchronous execution across cores.
  *
  * The ContextManager provides several critical capabilities:
- *   - Safe cross-core execution through the execWorkSynchronously mechanism
- *   - Worker lifecycle management (adding, removing, signaling)
- *   - Lock-based thread safety for atomic operations
- *   - Resource management with explicit initialization and cleanup
+ *   - Safe cross-core execution through the execWorkSynchronously mechanism.
+ *   - Worker lifecycle management (adding, removing, signaling).
+ *   - Lock-based thread safety for atomic operations.
+ *   - Resource management with explicit initialization and cleanup.
  *
  * Most methods verify the context's validity before performing operations,
  * making the class robust against improper usage sequences (e.g., using before
@@ -181,7 +180,7 @@ namespace async_bridge {
     }
 
     uint32_t
-    ContextManager::execWorkSynchronously(const HandlerFunction &handler,
+    ContextManager::execWorkSynchronously(const handler_function_t &handler,
                                           void *param) const {
         return async_context_execute_sync(m_context_core, handler, param);
     }
