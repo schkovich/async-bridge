@@ -23,8 +23,10 @@
  */
 
 #include "ContextManager.hpp"
-#include "../../PerpetualWorker.hpp"
+
 #include "../../EphemeralWorker.hpp"
+#include "../../PerpetualWorker.hpp"
+#include "../../async_bridge/SyncWorker.hpp"
 #include <Arduino.h>
 
 namespace async_bridge {
@@ -53,7 +55,7 @@ namespace async_bridge {
         return true;
     }
 
-    bool ContextManager::addWorker(PerpetualWorker& worker) const {
+    bool ContextManager::addWorker(PerpetualWorker &worker) const {
         if (!initiated) {
             return false;
         }
@@ -63,13 +65,13 @@ namespace async_bridge {
             critical_section_t crit_sec = {nullptr};
             critical_section_init(&crit_sec);
             critical_section_enter_blocking(&crit_sec);
-            added = async_context_add_when_pending_worker(m_context_core,
-                                                          worker.getWorker());
+            added = async_context_add_when_pending_worker(
+                m_context_core, &worker.getCoreWorker());
             critical_section_exit(&crit_sec);
             critical_section_deinit(&crit_sec);
         } else {
-            added = async_context_add_when_pending_worker(m_context_core,
-                                                          worker.getWorker());
+            added = async_context_add_when_pending_worker(
+                m_context_core, &worker.getCoreWorker());
         }
 
         if (!added) {
@@ -80,13 +82,13 @@ namespace async_bridge {
         return true;
     }
 
-    bool ContextManager::addWorker(EphemeralWorker& worker,
+    bool ContextManager::addWorker(EphemeralWorker &worker,
                                    const uint32_t delay) const {
         if (!initiated) {
             DEBUGV("ContextManager::addWorker - no context!\n");
             return false;
         }
-        const auto worker_ptr = worker.getWorker();
+        async_at_time_worker_t *worker_ptr = &worker.getCoreWorker();
         if (worker_ptr->do_work == nullptr) {
             DEBUGV(
                 "ContextManager::addWorker - handler function not defined!\n");
@@ -120,7 +122,34 @@ namespace async_bridge {
         return true;
     }
 
-    bool ContextManager::removeWorker(PerpetualWorker& worker) const {
+    bool ContextManager::addWorker(SyncWorker &worker) const {
+        if (!initiated) {
+            return false;
+        }
+        bool added = false;
+
+        if (get_core_num() != m_context_core->core_num) {
+            critical_section_t crit_sec = {nullptr};
+            critical_section_init(&crit_sec);
+            critical_section_enter_blocking(&crit_sec);
+            added = async_context_add_when_pending_worker(
+                m_context_core, &worker.getCoreWorker());
+            critical_section_exit(&crit_sec);
+            critical_section_deinit(&crit_sec);
+        } else {
+            added = async_context_add_when_pending_worker(
+                m_context_core, &worker.getCoreWorker());
+        }
+
+        if (!added) {
+            DEBUGV("ContextManager::addWorker - Failed to add sync worker!\n");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool ContextManager::removeWorker(PerpetualWorker &worker) const {
         if (!initiated) {
             DEBUGV("ContextManager::removeWorker - no context!\n");
             return false;
@@ -132,12 +161,12 @@ namespace async_bridge {
             critical_section_init(&crit_sec);
             critical_section_enter_blocking(&crit_sec);
             removed = async_context_remove_when_pending_worker(
-                m_context_core, worker.getWorker());
+                m_context_core, &worker.getCoreWorker());
             critical_section_exit(&crit_sec);
             critical_section_deinit(&crit_sec);
         } else {
             removed = async_context_remove_when_pending_worker(
-                m_context_core, worker.getWorker());
+                m_context_core, &worker.getCoreWorker());
         }
 
         if (!removed) {
@@ -148,12 +177,39 @@ namespace async_bridge {
         return true;
     }
 
-    bool ContextManager::removeWorker(EphemeralWorker& worker) const {
+    bool ContextManager::removeWorker(SyncWorker &worker) const {
+        if (!initiated) {
+            return false;
+        }
+        bool removed = false;
+
+        if (get_core_num() != m_context_core->core_num) {
+            critical_section_t crit_sec = {nullptr};
+            critical_section_init(&crit_sec);
+            critical_section_enter_blocking(&crit_sec);
+            removed = async_context_remove_when_pending_worker(
+                m_context_core, &worker.getCoreWorker());
+            critical_section_exit(&crit_sec);
+            critical_section_deinit(&crit_sec);
+        } else {
+            removed = async_context_remove_when_pending_worker(
+                m_context_core, &worker.getCoreWorker());
+        }
+
+        if (!removed) {
+            DEBUGV("ContextManager::removeWorker - Failed to remove sync "
+                   "worker!\n");
+            return false;
+        }
+        return true;
+    }
+
+    bool ContextManager::removeWorker(EphemeralWorker &worker) const {
         if (!initiated) {
             return false;
         }
         if (!async_context_remove_at_time_worker(m_context_core,
-                                                 worker.getWorker())) {
+                                                 &worker.getCoreWorker())) {
             DEBUGV("ContextManager::removeWorker(Worker &worker) - Failed to "
                    "remove at time worker!\n");
             return false;
@@ -161,9 +217,17 @@ namespace async_bridge {
         return true;
     }
 
-    void ContextManager::setWorkPending(PerpetualWorker& worker) const {
+    void ContextManager::setWorkPending(PerpetualWorker &worker) const {
         if (initiated) {
-            async_context_set_work_pending(m_context_core, worker.getWorker());
+            async_context_set_work_pending(m_context_core,
+                                           &worker.getCoreWorker());
+        }
+    }
+
+    void ContextManager::setWorkPending(SyncWorker &worker) const {
+        if (initiated) {
+            async_context_set_work_pending(m_context_core,
+                                           &worker.getCoreWorker());
         }
     }
 

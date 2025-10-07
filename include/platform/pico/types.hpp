@@ -3,10 +3,17 @@
 //
 
 #pragma once
+#include <Arduino.h>
+#include <cstddef>
 #include <cstdint>
+#include <memory>
+#include <type_traits>
 #include <pico/async_context.h>
 
 namespace async_bridge {
+
+    class SyncBridge;
+    struct SyncPayload;
     /**
      * @typedef uint8_t byte
      * @brief Defines a byte as an unsigned 8-bit integer.
@@ -34,36 +41,75 @@ namespace async_bridge {
     using perpetual_bridging_function_t =
         void (*)(async_context_t *, async_when_pending_worker_t *);
 
-    using ephemeral_bridging_function_t =
-        void (*)(async_context_t *,
-                                  async_work_on_timeout *);
+    using ephemeral_bridging_function_t = void (*)(async_context_t *,
+                                                   async_work_on_timeout *);
 
-    using perpetual_worker_t = async_when_pending_worker_t;
-    using ephemeral_worker_t = async_at_time_worker_t;
+    /**
+     * @typedef SyncPayloadPtr
+     * @brief Convenience alias for a unique pointer to a SyncPayload
+     */
+    using SyncPayloadPtr = std::unique_ptr<SyncPayload>;
 
-    extern "C" {
-        // Forward declaration of the perpetual bridging function
-        void perpetual_bridging_function(async_context_t *context,
-                                         async_when_pending_worker_t *worker);
+    using sync_callback_t = uint32_t (SyncBridge::*)(SyncPayloadPtr payload);
 
-        // Forward declaration of the ephemeral bridging function
-        void ephemeral_bridging_function(async_context_t *context,
-                                         async_work_on_timeout *worker);
-        /**
-         * @brief Synchronous bridging function for async context worker execution (C
-         * linkage).
-         *
-         * This function is registered as the handler for PerpetualWorker in
-         * SyncBridge::execute(). It is always called in the correct async context,
-         * executes the user operation, and signals completion by releasing the
-         * stack-allocated semaphore in the ExecutionContext.
-         *
-         * @param context Pointer to the async context (unused).
-         * @param worker  Pointer to the async_when_pending_worker_t containing the
-         * ExecutionContext.
-         */
-        void sync_bridging_function(async_context_t *context,
-                                     async_when_pending_worker_t *worker);
+    typedef struct sync_worker {
+            async_when_pending_worker_t worker{}; // supertype C‑style field
+            semaphore_t semaphore{};
+            sync_callback_t callback{};
+            SyncPayload *payload{nullptr};
+            uint32_t result{0};
 
-    }
+            // Non-copyable
+            sync_worker() = default;
+            sync_worker(const sync_worker &) = delete;
+            sync_worker &operator=(const sync_worker &) = delete;
+    } sync_worker;
+
+    using sync_worker_t = sync_worker;
+
+    static_assert(std::is_standard_layout_v<sync_worker_t>,
+                  "sync_worker must be standard-layout for owner pointer "
+                  "arithmetic to be valid");
+
+    static_assert(offsetof(sync_worker_t, worker) == 0,
+                  "sync_worker::worker must be at offset 0 so "
+                  "async_when_pending_worker_t* == sync_worker*");
+
+    typedef struct perpetual_worker {
+            async_when_pending_worker_t worker{}; // supertype C‑style field
+
+            // Non-copyable
+            perpetual_worker() = default;
+            perpetual_worker(const perpetual_worker &) = delete;
+            perpetual_worker &operator=(const perpetual_worker &) = delete;
+    } perpetual_worker;
+
+    using perpetual_worker_t = perpetual_worker;
+
+    static_assert(std::is_standard_layout_v<perpetual_worker_t>,
+                  "perpetual_worker must be standard-layout for owner pointer "
+                  "arithmetic to be valid");
+
+    static_assert(offsetof(perpetual_worker_t, worker) == 0,
+                  "perpetual_worker_t::worker must be at offset 0 so "
+                  "async_when_pending_worker_t* == perpetual_worker_t*");
+
+    typedef struct ephemeral_worker {
+            async_at_time_worker_t worker{}; // supertype C‑style field
+
+            // Non-copyable
+            ephemeral_worker() = default;
+            ephemeral_worker(const ephemeral_worker &) = delete;
+            ephemeral_worker &operator=(const ephemeral_worker &) = delete;
+    } ephemeral_worker;
+
+    using ephemeral_worker_t = ephemeral_worker;
+
+    static_assert( std::is_standard_layout_v<ephemeral_worker_t>,
+                  "ephemeral_worker must be standard-layout for owner pointer "
+                  "arithmetic to be valid");
+
+    static_assert(offsetof(ephemeral_worker_t, worker) == 0,
+                  "ephemeral_worker_t::worker must be at offset 0 so "
+                  "async_at_time_worker_t* == ephemeral_worker_t*");
 } // namespace async_bridge

@@ -17,73 +17,41 @@
  */
 
 #include "SyncBridge.hpp"
-
-#include <pico/mutex.h>
+#include "async_bridge/SyncWorker.hpp"
+#include "platform/pico/SyncBridgeTb.hpp"
 
 namespace async_bridge {
 
-    SyncBridge::SyncBridge(const AsyncCtx &ctx) : m_ctx(ctx) {}
+    SyncBridge::~SyncBridge() = default;
 
-    uint32_t SyncBridge::doExecute(SyncPayloadPtr payload) { // NOLINT
-        return onExecute(std::move(payload));
+    void SyncBridge::initialiseBridge() {}
+
+    void SyncBridge::onWork() {}
+
+    SyncBridge::SyncBridge(IAsyncContext &ctx)
+        : IEventBridge(ctx), pImpl(std::make_unique<Impl>(ctx, this)),
+          m_ctx(ctx) {}
+
+    uint32_t SyncBridge::execute(std::unique_ptr<SyncPayload> payload) {
+        return pImpl->execute(std::move(payload));
     }
 
-    uint32_t SyncBridge::execute(SyncPayloadPtr payload) {
-        lockBridge();
-        auto semaphore = getSemaphore();
-        auto exec_ctx = getExecutionContext(std::move(payload), semaphore);
-        auto worker = getWorker(exec_ctx);
-        const auto result = executeWork(std::move(worker), std::move(exec_ctx),
-                                        std::move(semaphore));
-        unlockBridge();
-        return result;
-    }
-
-    std::unique_ptr<semaphore_t> SyncBridge::getSemaphore() {
-        auto semaphore = std::make_unique<semaphore_t>();
-        sem_init(semaphore.get(), 0, 1);
-        return semaphore;
-    }
-
-    std::unique_ptr<SyncBridge::ExecutionContext>
-    SyncBridge::getExecutionContext(
-        SyncPayloadPtr payload, const std::unique_ptr<semaphore_t> &semaphore) {
-        return std::make_unique<ExecutionContext>(
-            ExecutionContext{this, std::move(payload), 0, semaphore.get()});
-    }
-
-    std::unique_ptr<PerpetualWorker> SyncBridge::getWorker(
-        const std::unique_ptr<ExecutionContext> &exec_ctx) { // NOLINT
-        auto worker = std::make_unique<PerpetualWorker>();
-        worker->setHandler(sync_handler);
-        worker->setPayload(exec_ctx.get());
-        return worker;
-    }
-
-    uint32_t SyncBridge::executeWork(
-        std::unique_ptr<PerpetualWorker> worker,        // NOLINT
-        std::unique_ptr<ExecutionContext> exec_ctx,     // NOLINT
-        std::unique_ptr<semaphore_t> semaphore) const { // NOLINT
-        m_ctx.addWorker(*worker);
-        m_ctx.setWorkPending(*worker);
-
-        sem_acquire_blocking(semaphore.get());
-
-        m_ctx.removeWorker(*worker);
-
-        return exec_ctx->result;
-    }
-
-    extern "C" void
-    sync_handler(async_context_t *context,              // NOLINT
-                 async_when_pending_worker_t *worker) { // NOLINT
+    // ReSharper disable once CppParameterMayBeConstPtrOrRef
+    void SyncBridge::bridgingFunction(async_context_t *context,
+                                      async_when_pending_worker_t *worker) {
         (void)context;
-        auto *exec_ctx =
-            static_cast<SyncBridge::ExecutionContext *>(worker->user_data);
-
-        exec_ctx->result =
-            exec_ctx->bridge->doExecute(std::move(exec_ctx->payload));
-
-        sem_release(exec_ctx->semaphore);
+        assert(worker && worker->user_data);
+        const auto sync_worker = reinterpret_cast<sync_worker_t *>(worker);
+        const auto sync_bridge = static_cast<SyncBridge *>(worker->user_data);
+        assert(sync_bridge && sync_worker && sync_worker->callback);
+        const auto callback = sync_worker->callback;
+        sync_worker->result = (sync_bridge->*callback)(
+            std::unique_ptr<SyncPayload>(sync_worker->payload));
+        sem_release(&sync_worker->semaphore);
     }
-} // namespace async_tcp
+
+    bool SyncBridge::isCrossCore() const {
+        return getContext().getCore() != get_core_num();
+    }
+
+} // namespace async_bridge

@@ -1,40 +1,29 @@
 // cpp
 // SPDX-License-Identifier: MPL-2.0
 #pragma once
+
+#include "async_bridge/traits.hpp" // brings has_do_work / has_user_data into scope
 #include <type_traits>
 #include <utility>
 
 namespace async_bridge {
 
-    // ---------- traits primary (no `type`) ----------
-    template <class T>
-    struct handler_traits; // primary left intentionally undefined
-
-    // detect presence of user_data member
-    template <class T, class = void> struct has_user_data : std::false_type {};
-    template <class T>
-    struct has_user_data<T, std::void_t<decltype(std::declval<T>().user_data)>>
-        : std::true_type {};
-
-    // detect presence of do_work member
-    template <class T, class = void> struct has_do_work : std::false_type {};
-    template <class T>
-    struct has_do_work<T, std::void_t<decltype(std::declval<T>().do_work)>>
-        : std::true_type {};
-
     template <class Derived, class WorkerT> class WorkerBase {
-        protected:
-            // base-owned worker instance
-            WorkerT m_worker{};
 
-            template <typename... Args>
+        protected:
+            WorkerT m_worker{}; // owned worker instance
+
+            // ------------------------------------------------------------------
+            template <class... Args>
             auto callHandler(Args &&...args)
                 -> std::invoke_result_t<typename handler_traits<Derived>::type,
                                         Args...> {
+                // using raw_handler_t = typename handler_traits<Derived>::type;
                 using result_t = std::invoke_result_t<raw_handler_t, Args...>;
 
-                auto f = m_worker.do_work; // function pointer stored in the
-                                           // worker struct
+                // fetch the function pointer stored in the worker
+                auto f = getCoreWorker().do_work;
+
                 if constexpr (std::is_void_v<result_t>) {
                     if (f)
                         f(std::forward<Args>(args)...);
@@ -55,32 +44,51 @@ namespace async_bridge {
             static_assert(
                 std::is_function_v<std::remove_pointer_t<raw_handler_t>>,
                 "handler_traits<Derived>::type must point to a function type");
+
             static_assert(has_user_data<WorkerT>::value,
                           "WorkerT must have a `user_data` member");
+
             static_assert(has_do_work<WorkerT>::value,
                           "WorkerT must have a `do_work` member");
             static_assert(
                 std::is_same_v<raw_handler_t,
-                               decltype(std::declval<WorkerT>().do_work)>,
-                "handler_traits<Derived>::type must match WorkerT::do_work "
+                               decltype(std::declval<WorkerT>().worker.do_work)>,
+                "handler_traits<Derived>::type must match WorkerT::worker.do_work "
                 "type");
 
             WorkerBase() = default;
             virtual ~WorkerBase() = default;
 
-            // handler API now writes into the worker's do_work field.
-            void setHandler(raw_handler_t h) noexcept { m_worker.do_work = h; }
-            void clearHandler() noexcept { m_worker.do_work = nullptr; }
+            // ------------------------------------------------------------------
+            // Accessors – return the *worker* sub‑object, not the enclosing
+            // class
+            WorkerT &getWorker() noexcept { return m_worker; }
+            const WorkerT &getWorker() const noexcept { return m_worker; }
 
-            // payload setter is non-virtual and operates on the base-owned
-            // worker
-            void setPayload(void *data) noexcept { m_worker.user_data = data; }
+            // Return the inner worker (core worker)
+            auto &getCoreWorker() noexcept { return m_worker.worker; }
+            const auto &getCoreWorker() const noexcept { return m_worker.worker; }
 
-            // Provide access to the internal worker for platform APIs that
-            // expect a pointer to the worker struct (keeps compatibility with
-            // existing ContextManager usage).
-            WorkerT* getWorker() noexcept { return &m_worker; }
-            const WorkerT* getWorker() const noexcept { return &m_worker; }
+            // ------------------------------------------------------------------
+            // API to install / clear the handler stored in the worker
+            void setHandler(raw_handler_t h) noexcept {
+
+                getCoreWorker().do_work = h;
+            }
+
+            void clearHandler() noexcept {
+                getCoreWorker().do_work = nullptr;
+            }
+
+            // ------------------------------------------------------------------
+            // Payload handling (user_data field)
+            void setPayload(void *data) noexcept {
+                getCoreWorker().user_data = data;
+            }
+            void *getPayload() noexcept { return getCoreWorker().user_data; }
+            [[nodiscard]] const void *getPayload() const noexcept {
+                return getCoreWorker().user_data;
+            }
     };
 
 } // namespace async_bridge

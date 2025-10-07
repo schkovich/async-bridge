@@ -1,6 +1,9 @@
 #include "EphemeralBridge.hpp"
 
-namespace async_tcp {
+#include "IAsyncContext.hpp"
+#include "platform/pico/types.hpp"
+
+namespace async_bridge {
 
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     void ephemeral_bridging_function(
@@ -16,22 +19,14 @@ namespace async_tcp {
         local_bridge->doWork();
     }
 
-    std::unique_ptr<EphemeralBridge> EphemeralBridge::releaseOwnership() {
-        return std::move(m_self);
-    }
-
     void EphemeralBridge::initialiseBridge() {
         m_ephemeral_worker.setHandler(&ephemeral_bridging_function);
         m_ephemeral_worker.setPayload(this);
     }
 
-    void EphemeralBridge::takeOwnership(std::unique_ptr<EphemeralBridge> self) {
-        m_self = std::move(self);
-    }
-
-    void EphemeralBridge::run(const uint32_t run_in) {
+    void EphemeralBridge::run(const uint32_t run_in_ms) {
         if (const auto result =
-                getContext().addWorker(m_ephemeral_worker, run_in);
+                getContext().addWorker(m_ephemeral_worker, run_in_ms);
             !result) {
             DEBUGCORE("[c%d][%llu][ERROR] EphemeralBridge::run - Failed to "
                       "add ephemeral worker: %p, error: %lu\n",
@@ -39,4 +34,4 @@ namespace async_tcp {
         }
     }
 
-} // namespace async_tcp
+} // namespace async_bridge

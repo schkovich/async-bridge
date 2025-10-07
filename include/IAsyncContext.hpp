@@ -6,6 +6,7 @@ namespace async_bridge {
 
 class PerpetualWorker;
 class EphemeralWorker;
+class SyncWorker;
 
 /**
  * Minimal abstract async context interface used by bridge base classes.
@@ -17,9 +18,12 @@ class IAsyncContext {
 public:
     virtual bool addWorker(PerpetualWorker &worker) const = 0;
     virtual bool addWorker(EphemeralWorker &worker, std::uint32_t delay) const = 0;
+    virtual bool addWorker(SyncWorker &worker) const = 0;
     virtual bool removeWorker(PerpetualWorker &worker) const = 0;
     virtual bool removeWorker(EphemeralWorker &worker) const = 0;
+    virtual bool removeWorker(SyncWorker &worker) const = 0;
     virtual void setWorkPending(PerpetualWorker &worker) const = 0;
+    virtual void setWorkPending(SyncWorker &worker) const = 0;
 
     virtual void acquireLock() const = 0;
     virtual void releaseLock() const = 0;

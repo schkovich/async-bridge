@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 #pragma once
-#include "../IAsyncContext.hpp"
 
 namespace async_bridge {
     class IAsyncContext;
@@ -13,7 +12,7 @@ protected:
 
     virtual void onWork() = 0;
 
-    void doWork() { onWork(); }
+    virtual void doWork() { onWork(); }
 
     [[nodiscard]] const IAsyncContext &getContext() const { return m_ctx; }
 

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "IAsyncContext.hpp"
+#include "async_bridge/IEventBridge.hpp"
 
 #include <memory>
 
@@ -15,28 +16,53 @@ namespace async_bridge {
      * common interface for different types of work data.
      *
      * @note Derived payload types must be final to prevent slicing issues
-     * during polymorphic use
+     * during polymorphic use.
      */
     struct SyncPayload {
-        SyncPayload() noexcept = default;
-        virtual ~SyncPayload() noexcept = default;
+            SyncPayload() noexcept = default;
+            virtual ~SyncPayload() noexcept = default;
     };
 
-class SyncBridge {
+    class SyncBridge : public IEventBridge {
+            class Impl;
+            std::unique_ptr<Impl> pImpl{};
+            const IAsyncContext &m_ctx;
 
-public:
-    explicit SyncBridge(const IAsyncContext &ctx) : m_ctx(ctx) {}
-    virtual ~SyncBridge() = default;
+            /**
+             * @brief Pure virtual method to be implemented by derived classes
+             * for actual resource operation.
+             *
+             * This method is called in the correct execution context by the
+             * SyncBridge machinery. It receives a unique payload for the
+             * operation and must return a result code.
+             *
+             * @param payload A unique pointer to operation data for this
+             * execution.
+             * @return uint32_t Result code from the operation.
+             */
+            virtual uint32_t onExecute(SyncPayloadPtr payload) = 0;
 
-    // Derived classes implement this to run payloads on the context core
-    virtual uint32_t onExecute(std::unique_ptr<SyncPayload> payload) = 0;
+        public:
+            explicit SyncBridge(IAsyncContext &ctx);
+            ~SyncBridge() override;
 
-    // Execute synchronously on the context; blocks until completion
-    uint32_t execute(std::unique_ptr<SyncPayload> payload);
+            void initialiseBridge() override;
 
-protected:
-    const IAsyncContext &m_ctx;
-};
+            // Execute synchronously on the context; blocks until completion
+            [[nodiscard]] uint32_t execute(std::unique_ptr<SyncPayload> payload);
+
+        protected:
+            static void bridgingFunction(async_context_t *context,
+                                         async_when_pending_worker_t *worker);
+
+            void onWork() override;
+
+            [[nodiscard]] bool isCrossCore() const;
+
+            // Acquire/release the async context lock for same-core safe
+            // sections
+            void ctxLock() const { m_ctx.acquireLock(); }
+            void ctxUnlock() const { m_ctx.releaseLock(); }
+    };
 
 } // namespace async_bridge
-

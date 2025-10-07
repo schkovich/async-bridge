@@ -22,13 +22,13 @@ public:
 
     void initialiseBridge() override;
 
-    void run() const;
+    void run();
 
     // Optional workload entry point for derived classes
     void workload(void *data) override;
 
 protected:
-    PerpetualWorker *m_perpetual_worker = nullptr;
+    PerpetualWorker m_perpetual_worker = {};
 };
 
 using PerpetualBridgePtr = std::unique_ptr<PerpetualBridge>;

@@ -1,8 +1,7 @@
 #include "../../../include/PerpetualBridge.hpp"
 
 #include "../../../include/PerpetualWorker.hpp"
-
-#include <pico/async_context.h>
+#include "IAsyncContext.hpp"
 
 namespace async_bridge {
 
@@ -16,13 +15,14 @@ namespace async_bridge {
     }
 
     void PerpetualBridge::initialiseBridge() {
-        m_perpetual_worker->setHandler(&perpetual_bridging_function);
-        m_perpetual_worker->setPayload(this);
-        getContext().addWorker(*m_perpetual_worker);
+        m_perpetual_worker.setHandler(&perpetual_bridging_function);
+        m_perpetual_worker.setPayload(this);
+        getContext().addWorker(m_perpetual_worker);
     }
 
-    void PerpetualBridge::run() const {
-        getContext().setWorkPending(*m_perpetual_worker);
+    void PerpetualBridge::run() {
+        getContext().setWorkPending(m_perpetual_worker);
     }
+
     void PerpetualBridge::workload(void *data) {/* No-op by default */}
 } // namespace async_tcp

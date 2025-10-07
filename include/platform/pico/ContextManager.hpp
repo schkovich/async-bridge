@@ -125,6 +125,8 @@ namespace async_bridge {
              */
             bool addWorker(EphemeralWorker& worker, uint32_t delay = 0) const override;
 
+            bool addWorker(SyncWorker &worker) const override;
+
             /**
              * @brief Removes a previously added worker from the context.
              *
@@ -137,6 +139,7 @@ namespace async_bridge {
              * otherwise
              */
             bool removeWorker(PerpetualWorker& worker) const override;
+            bool removeWorker(SyncWorker &worker) const override;
 
             /**
              * @brief Removes an ephemeral worker from the scheduled queue
@@ -160,6 +163,8 @@ namespace async_bridge {
              * work is set as pending
              */
             void setWorkPending(PerpetualWorker& worker) const override;
+
+            void setWorkPending(SyncWorker &worker) const override;
 
             /**
              * @brief Acquires a blocking lock on the asynchronous context.
