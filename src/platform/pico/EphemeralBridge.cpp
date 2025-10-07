@@ -1,6 +1,6 @@
 #include "EphemeralBridge.hpp"
 
-#include "IAsyncContext.hpp"
+#include "async_bridge/IAsyncContext.hpp"
 #include "platform/pico/types.hpp"
 
 namespace async_bridge {

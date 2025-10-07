@@ -25,7 +25,7 @@
 #include "ContextManager.hpp"
 
 #include "../../EphemeralWorker.hpp"
-#include "../../PerpetualWorker.hpp"
+#include "../../async_bridge/PerpetualWorker.hpp"
 #include "../../async_bridge/SyncWorker.hpp"
 #include <Arduino.h>
 

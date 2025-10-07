@@ -1,7 +1,6 @@
 #include "../../../include/PerpetualBridge.hpp"
 
-#include "../../../include/PerpetualWorker.hpp"
-#include "IAsyncContext.hpp"
+#include "async_bridge/IAsyncContext.hpp"
 
 namespace async_bridge {
 
