@@ -3,8 +3,8 @@
 
 #include <pico/mutex.h>
 
+#include "../../async_bridge/SyncBridge.hpp"
 #include "platform/pico/types.hpp"
-#include "SyncBridge.hpp"
 
 namespace async_bridge {
 

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 #pragma once
 
-#include "async_bridge/EphemeralWorker.hpp"
-#include "async_bridge/IEventBridge.hpp"
+#include "EphemeralWorker.hpp"
+#include "IEventBridge.hpp"
 
 #include <memory>
 
