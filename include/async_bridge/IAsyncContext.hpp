@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform/pico/types.hpp"
+#include "../platform/pico/types.hpp"
 
 namespace async_bridge {
 

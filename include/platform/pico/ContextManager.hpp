@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "../../IAsyncContext.hpp"
+#include "../../async_bridge/IAsyncContext.hpp"
 #include "platform/pico/types.hpp"
 
 #include <pico/async_context_threadsafe_background.h>

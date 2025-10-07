@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 #pragma once
 
-#include "IAsyncContext.hpp"
+#include "async_bridge/IAsyncContext.hpp"
 #include "async_bridge/IEventBridge.hpp"
 
 #include <memory>
