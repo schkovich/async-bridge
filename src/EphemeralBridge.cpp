@@ -1,4 +1,4 @@
-#include "../../../include/async_bridge/EphemeralBridge.hpp"
+#include "../include/async_bridge/EphemeralBridge.hpp"
 
 #include "async_bridge/IAsyncContext.hpp"
 #include "platform/pico/types.hpp"

@@ -16,7 +16,7 @@
  * @date 2025-02-21
  */
 
-#include "../../../include/async_bridge/SyncBridge.hpp"
+#include "../include/async_bridge/SyncBridge.hpp"
 #include "async_bridge/SyncWorker.hpp"
 #include "platform/pico/SyncBridgeTb.hpp"
 
