@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 #pragma once
+#include "async_bridge/WorkerBase.hpp"
 #include "platform/pico/types.hpp"
-#include "WorkerBase.hpp"
 
 namespace async_bridge {
 

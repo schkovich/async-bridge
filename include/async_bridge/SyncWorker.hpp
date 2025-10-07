@@ -2,7 +2,7 @@
 #pragma once
 
 #include "../platform/pico/types.hpp"
-#include "../WorkerBase.hpp"
+#include "WorkerBase.hpp"
 
 namespace async_bridge {
 

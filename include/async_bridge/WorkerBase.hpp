@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 #pragma once
 
-#include "async_bridge/traits.hpp" // brings has_do_work / has_user_data into scope
+#include "traits.hpp"
 #include <type_traits>
 #include <utility>
 
