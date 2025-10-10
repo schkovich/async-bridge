@@ -2,6 +2,10 @@
   "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
   "name": "async-bridge",
   "version": "0.0.1",
+  "build": {
+    "srcDir": ".",
+    "srcFilter": "+<src> +<include/platform/pico>"
+  },
   "repository": {
     "type": "git",
     "url": "async-bridge=git@github.com:schkovich/async-bridge.git"
