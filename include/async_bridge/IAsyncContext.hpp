@@ -45,4 +45,4 @@ public:
 
 using AsyncCtx = IAsyncContext; // compatibility alias used across the codebase
 
-} // namespace async_tcp
+} // namespace async_bridge

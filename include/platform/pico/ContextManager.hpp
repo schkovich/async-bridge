@@ -19,7 +19,7 @@
  * particularly important in embedded systems with limited error recovery
  * options.
  *
- * @ingroup AsyncTCPClient
+ * @ingroup AsyncBridge
  */
 
 #pragma once
@@ -61,7 +61,7 @@ namespace async_bridge {
      * Thread safety is guaranteed by the underlying async_context
      * implementation.
      */
-    class ContextManager : public IAsyncContext {
+    class ContextManager final : public IAsyncContext {
 
             async_context_threadsafe_background_t m_context; /**< Thread-safe background context for asynchronous operations. */
             async_context_t *m_context_core = nullptr; /**< Reference to the core asynchronous context. */
@@ -123,7 +123,7 @@ namespace async_bridge {
              * @return true if the worker was successfully scheduled, false
              * otherwise
              */
-            bool addWorker(EphemeralWorker& worker, uint32_t delay = 0) const override;
+            bool addWorker(EphemeralWorker& worker, uint32_t delay) const override;
 
             bool addWorker(SyncWorker &worker) const override;
 
@@ -222,7 +222,7 @@ namespace async_bridge {
              */
             [[nodiscard]] uint32_t
             execWorkSynchronously(const handler_function_t &handler,
-                                  void *param) const;
+                                  void *param) override;
 
             /**
              * @brief Gets the CPU core number where this context is running.
@@ -250,7 +250,7 @@ namespace async_bridge {
              *
              * @param until The absolute time until which to wait
              */
-            void waitUntil(absolute_time_t until) const;
+            void waitUntil(std::int64_t until) override;
     };
 
-} // namespace async_tcp
+} // namespace async_bridge

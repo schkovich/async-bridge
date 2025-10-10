@@ -24,10 +24,9 @@
 
 #include "ContextManager.hpp"
 
-#include "../../EphemeralWorker.hpp"
+#include "../../async_bridge/EphemeralWorker.hpp"
 #include "../../async_bridge/PerpetualWorker.hpp"
 #include "../../async_bridge/SyncWorker.hpp"
-#include <Arduino.h>
 
 namespace async_bridge {
 
@@ -245,7 +244,7 @@ namespace async_bridge {
 
     uint32_t
     ContextManager::execWorkSynchronously(const handler_function_t &handler,
-                                          void *param) const {
+                                          void *param) {
         return async_context_execute_sync(m_context_core, handler, param);
     }
 
@@ -255,7 +254,7 @@ namespace async_bridge {
         async_context_lock_check(m_context_core);
     }
 
-    void ContextManager::waitUntil(const absolute_time_t until) const {
-        async_context_wait_until(m_context_core, until);
+    void ContextManager::waitUntil(const std::int64_t until) {
+        async_context_wait_until(m_context_core, static_cast<absolute_time_t>(until));
     }
 } // namespace async_bridge
