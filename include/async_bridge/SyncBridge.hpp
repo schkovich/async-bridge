@@ -3,25 +3,11 @@
 
 #include "IAsyncContext.hpp"
 #include "IEventBridge.hpp"
+#include "platform/pico/types.hpp"
 
 #include <memory>
 
 namespace async_bridge {
-    /**
-     * @struct SyncPayload
-     * @brief Base type for synchronous work payloads
-     *
-     * This structure serves as a polymorphic base for all payload types that
-     * can be passed to SyncBridge for thread-safe execution. It defines a
-     * common interface for different types of work data.
-     *
-     * @note Derived payload types must be final to prevent slicing issues
-     * during polymorphic use.
-     */
-    struct SyncPayload {
-            SyncPayload() noexcept = default;
-            virtual ~SyncPayload() noexcept = default;
-    };
 
     class SyncBridge : public IEventBridge {
             class Impl;

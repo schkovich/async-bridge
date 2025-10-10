@@ -45,6 +45,23 @@ namespace async_bridge {
                                                    async_work_on_timeout *);
 
     /**
+     * @struct SyncPayload
+     * @brief Base type for synchronous work payloads
+     *
+     * This structure serves as a polymorphic base for all payload types that
+     * can be passed to SyncBridge for thread-safe execution. It defines a
+     * common interface for different types of work data.
+     *
+     * @note Derived payload types must be final to prevent slicing issues
+     * during polymorphic use.
+     */
+    struct SyncPayload {
+        SyncPayload() noexcept = default;
+        virtual ~SyncPayload() noexcept = default;
+    };
+
+
+    /**
      * @typedef SyncPayloadPtr
      * @brief Convenience alias for a unique pointer to a SyncPayload
      */
