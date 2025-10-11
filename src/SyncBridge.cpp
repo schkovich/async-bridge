@@ -41,13 +41,17 @@ namespace async_bridge {
                                       async_when_pending_worker_t *worker) {
         (void)context;
         assert(worker && worker->user_data);
-        const auto sync_worker = reinterpret_cast<sync_worker_t *>(worker);
+        const auto sync_worker = reinterpret_cast<SyncWorker *>(worker);
         const auto sync_bridge = static_cast<SyncBridge *>(worker->user_data);
-        assert(sync_bridge && sync_worker && sync_worker->callback);
-        const auto callback = sync_worker->callback;
-        sync_worker->result = (sync_bridge->*callback)(
-            std::unique_ptr<SyncPayload>(sync_worker->payload));
-        sem_release(&sync_worker->semaphore);
+        assert(sync_worker);
+        assert(sync_bridge);
+        const auto sync_callback = sync_worker->getSyncCallback();
+        auto payload = sync_worker->getSyncPayload();
+        assert(payload);
+        assert(sync_callback);
+        // Call the actual onExecute method of the derived class
+        sync_worker->setResult((sync_bridge->*sync_callback)(std::move(payload)));
+        sync_worker->semaphoreRelease();
     }
 
     bool SyncBridge::isCrossCore() const {
