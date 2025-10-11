@@ -34,7 +34,6 @@ namespace async_bridge {
         m_ctx.setWorkPending(syncWorker);
         syncWorker.semaphoreAcquireBlocking();
         const auto result = syncWorker.getResult();
-        syncWorker.semaphoreRelease();
         m_ctx.removeWorker(syncWorker);
         return result;
     }
